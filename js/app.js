@@ -48,7 +48,9 @@ import { ACTIONS, createActivity } from './activity.js';
 import {
   renderSidebar,
   renderBottomNav,
+  renderMoreMenuDrawer,
   renderAuthScreen,
+  renderResetConfirmScreen,
   renderDashboard,
   renderVaultPage,
   renderDetailPage,
@@ -127,7 +129,7 @@ function resetAutoLockTimer() {
 export function lockVault(isAuto = false) {
   if (autoLockTimer) clearTimeout(autoLockTimer);
   if (vault) {
-    addActivityToVault(vault, createActivity(ACTIONS.LOCK, null, isAuto ? 'Auto-locked (timeout)' : 'Manual lock'));
+    addActivityToVault(vault, createActivity(ACTIONS.LOCK, null, isAuto ? 'Terkunci otomatis (habis waktu)' : 'Dikunci manual'));
     persistVaultSilently();
   }
 
@@ -152,7 +154,7 @@ export function lockVault(isAuto = false) {
   }
 
   if (isAuto) {
-    showToast('Vault auto-locked due to inactivity', 'info');
+    showToast('Brankas otomatis terkunci karena tidak ada aktivitas', 'info');
   }
 }
 
@@ -163,7 +165,7 @@ async function persistVault() {
     await saveVault(vault, encryptionKey);
   } catch (err) {
     console.error('Error saving vault:', err);
-    showToast('Error saving vault data', 'error');
+    showToast('Terjadi kesalahan saat menyimpan data brankas', 'error');
   }
 }
 
@@ -344,99 +346,6 @@ function updateStrengthBar(fillElementId, password) {
   fill.className = `strength-bar-fill ${className}`;
 }
 
-/* ---------- DEMO DATA GENERATOR ---------- */
-export function loadSampleData() {
-  const now = new Date();
-  const past30 = new Date(now - 30 * 86400000).toISOString();
-  const past200 = new Date(now - 200 * 86400000).toISOString();
-
-  const samples = [
-    {
-      id: generateId('item'),
-      type: 'login',
-      name: 'Google Workspace',
-      category: 'cat_work',
-      website: 'accounts.google.com',
-      username: 'irfan.dev@gmail.com',
-      password: 'Tr0ngP@ssw0rd!2026',
-      isFavorite: true,
-      createdAt: past30,
-      updatedAt: past30,
-      passwordChangedAt: past30,
-      customFields: [
-        { id: generateId('field'), label: 'Recovery Email', value: 'backup.irfan@outlook.com', isSensitive: false },
-        { id: generateId('field'), label: '2FA Backup Key', value: '4819-2093-1823-9912', isSensitive: true }
-      ],
-      notes: 'Primary developer account with cloud console access.',
-      isDeleted: false,
-      deletedAt: null
-    },
-    {
-      id: generateId('item'),
-      type: 'login',
-      name: 'GitHub Enterprise',
-      category: 'cat_work',
-      website: 'github.com',
-      username: 'irfandev',
-      password: 'Tr0ngP@ssw0rd!2026', // Reused password for Security Center detection!
-      isFavorite: true,
-      createdAt: past200,
-      updatedAt: past200,
-      passwordChangedAt: past200, // Old password (>180d) for Security Center detection!
-      customFields: [
-        { id: generateId('field'), label: 'SSH Key Fingerprint', value: 'SHA256:m9xK8...dev', isSensitive: false },
-        { id: generateId('field'), label: 'Personal Access Token', value: 'ghp_88x991abc00293km', isSensitive: true }
-      ],
-      notes: 'Contains private repositories and deployment keys.',
-      isDeleted: false,
-      deletedAt: null
-    },
-    {
-      id: generateId('item'),
-      type: 'login',
-      name: 'Spotify Premium',
-      category: 'cat_other',
-      website: 'spotify.com',
-      username: 'irfan_music',
-      password: '123456password', // Weak password for Security Center detection!
-      isFavorite: false,
-      createdAt: past30,
-      updatedAt: past30,
-      passwordChangedAt: past30,
-      customFields: [
-        { id: generateId('field'), label: 'Family Plan Admin', value: 'Yes', isSensitive: false }
-      ],
-      notes: 'Family subscription renewed monthly.',
-      isDeleted: false,
-      deletedAt: null
-    },
-    {
-      id: generateId('item'),
-      type: 'login',
-      name: 'Bank Mandiri Online',
-      category: 'cat_finance',
-      website: 'bankmandiri.co.id',
-      username: 'irfan_mandiri',
-      password: 'K#9m$2Px!vL8@qZ4',
-      isFavorite: true,
-      createdAt: past30,
-      updatedAt: past30,
-      passwordChangedAt: past30,
-      customFields: [
-        { id: generateId('field'), label: 'Account Number', value: '142-00-1928374-1', isSensitive: true },
-        { id: generateId('field'), label: 'Branch', value: 'Sudirman Central', isSensitive: false }
-      ],
-      notes: 'Main payroll and operational checking account.',
-      isDeleted: false,
-      deletedAt: null
-    }
-  ];
-
-  samples.forEach(s => vault.items.push(s));
-  addActivityToVault(vault, createActivity(ACTIONS.ADD_ITEM, 'Sample Accounts', 'Loaded realistic demonstration accounts'));
-  persistVault();
-}
-
 /* ============================================
    GLOBAL EVENT DELEGATION
    ============================================ */
@@ -480,6 +389,79 @@ async function handleGlobalClick(e) {
       break;
     }
 
+    case 'show-reset-confirm': {
+      e.preventDefault();
+      const authScreen = document.getElementById('auth-screen');
+      if (authScreen) {
+        authScreen.innerHTML = renderResetConfirmScreen();
+        refreshIcons();
+        // Live validation: enable button only when user types "RESET"
+        const input = document.getElementById('reset-confirm-input');
+        const btn = document.getElementById('btn-confirm-reset');
+        if (input && btn) {
+          input.addEventListener('input', () => {
+            btn.disabled = input.value.trim() !== 'RESET';
+          });
+          setTimeout(() => input.focus(), 100);
+        }
+      }
+      break;
+    }
+
+    case 'cancel-reset': {
+      e.preventDefault();
+      const authScreen = document.getElementById('auth-screen');
+      if (authScreen) {
+        authScreen.innerHTML = renderAuthScreen(isVaultInitialized());
+        refreshIcons();
+        setTimeout(() => document.getElementById('master-password')?.focus(), 100);
+      }
+      break;
+    }
+
+    case 'confirm-hard-reset': {
+      e.preventDefault();
+      const input = document.getElementById('reset-confirm-input');
+      if (input?.value.trim() !== 'RESET') return;
+      destroyVault();
+      vault = null;
+      encryptionKey = null;
+      const authScreen = document.getElementById('auth-screen');
+      if (authScreen) {
+        authScreen.innerHTML = renderAuthScreen(false);
+        refreshIcons();
+        setTimeout(() => document.getElementById('setup-name')?.focus(), 100);
+      }
+      break;
+    }
+
+    case 'open-more-menu': {
+      e.preventDefault();
+      const moreContainer = document.getElementById('more-menu-container');
+      if (moreContainer && vault) {
+        const deletedCount = getDeletedItems(vault).length;
+        moreContainer.innerHTML = renderMoreMenuDrawer(currentPage, deletedCount);
+        refreshIcons();
+      }
+      break;
+    }
+
+    case 'close-more-menu': {
+      e.preventDefault();
+      const moreContainer = document.getElementById('more-menu-container');
+      if (moreContainer) moreContainer.innerHTML = '';
+      break;
+    }
+
+    case 'navigate-more': {
+      e.preventDefault();
+      const moreContainer = document.getElementById('more-menu-container');
+      if (moreContainer) moreContainer.innerHTML = '';
+      const page = target.dataset.page;
+      navigateTo(page, {});
+      break;
+    }
+
     case 'lock-vault': {
       e.preventDefault();
       lockVault(false);
@@ -511,7 +493,7 @@ async function handleGlobalClick(e) {
         refreshIcons();
 
         if (isBlurred && vault) {
-          addActivityToVault(vault, createActivity(ACTIONS.VIEW_PASSWORD, getItemById(vault, id)?.name, 'Viewed password'));
+          addActivityToVault(vault, createActivity(ACTIONS.VIEW_PASSWORD, getItemById(vault, id)?.name, 'Melihat kata sandi'));
           persistVaultSilently();
         }
       }
@@ -540,7 +522,7 @@ async function handleGlobalClick(e) {
       if (value) {
         const ok = await copyToClipboard(value);
         if (ok) {
-          showToast(`${label} copied! (Clipboard auto-clears in 30s)`, 'success');
+          showToast(`${label} disalin! (Papan klip otomatis bersih dalam 30d)`, 'success');
 
           // 30-second clipboard security wipe
           if (clipboardClearTimer) clearTimeout(clipboardClearTimer);
@@ -553,10 +535,10 @@ async function handleGlobalClick(e) {
           }, 30000);
 
           if (vault && label.toLowerCase().includes('password')) {
-            addActivityToVault(vault, createActivity(ACTIONS.COPY_PASSWORD, itemName, 'Copied password'));
+            addActivityToVault(vault, createActivity(ACTIONS.COPY_PASSWORD, itemName, 'Menyalin kata sandi'));
             persistVaultSilently();
           } else if (vault) {
-            addActivityToVault(vault, createActivity(ACTIONS.COPY_FIELD, itemName, `Copied ${label}`));
+            addActivityToVault(vault, createActivity(ACTIONS.COPY_FIELD, itemName, `Disalin ${label}`));
             persistVaultSilently();
           }
         }
@@ -570,7 +552,7 @@ async function handleGlobalClick(e) {
       if (pwEl && pwEl.textContent && pwEl.textContent !== 'Click Generate') {
         const ok = await copyToClipboard(pwEl.textContent);
         if (ok) {
-          showToast('Generated password copied to clipboard!', 'success');
+          showToast('Kata sandi yang dibuat disalin ke papan klip!', 'success');
         }
       }
       break;
@@ -590,7 +572,7 @@ async function handleGlobalClick(e) {
         pwInput.value = generated;
         pwInput.type = 'text'; // Reveal generated password so user can see it
         updateStrengthBar('item-strength-fill', generated);
-        showToast('Strong password generated!', 'success');
+        showToast('Kata sandi kuat berhasil dibuat!', 'success');
       }
       break;
     }
@@ -602,7 +584,7 @@ async function handleGlobalClick(e) {
       const isFav = toggleFavorite(vault, id);
       await persistVault();
       const item = getItemById(vault, id);
-      showToast(isFav ? `Added "${item?.name}" to Favorites` : `Removed "${item?.name}" from Favorites`, 'info');
+      showToast(isFav ? `Added "${item?.name}" ke Favorit` : `Removed "${item?.name}" dari Favorit`, 'info');
       navigateTo(currentPage, { id }, false);
       break;
     }
@@ -612,9 +594,9 @@ async function handleGlobalClick(e) {
       const id = target.dataset.id;
       const name = target.dataset.name || 'this account';
       showModal(renderConfirmModal(
-        'Move to Recycle Bin',
-        `Are you sure you want to move <strong>${escapeHtml(name)}</strong> to the Recycle Bin? You can restore it anytime within 30 days.`,
-        'Move to Bin',
+        'Pindah ke Tempat Sampah',
+        `Apakah Anda yakin ingin memindahkan <strong>${escapeHtml(name)}</strong> ke Tempat Sampah? Anda dapat memulihkannya kapan saja dalam 30 hari.`,
+        'Pindahkan ke Sampah',
         `confirm-soft-delete" data-id="${id}" data-name="${escapeHtml(name)}`
       ));
       break;
@@ -626,7 +608,7 @@ async function handleGlobalClick(e) {
       const name = target.dataset.name;
       if (vault && id) {
         softDeleteItem(vault, id);
-        addActivityToVault(vault, createActivity(ACTIONS.DELETE_ITEM, name, 'Moved to Recycle Bin'));
+        addActivityToVault(vault, createActivity(ACTIONS.DELETE_ITEM, name, 'Dipindahkan ke Tempat Sampah'));
         await persistVault();
         closeModal();
         showToast(`"${name}" moved to Recycle Bin`, 'info');
@@ -641,9 +623,9 @@ async function handleGlobalClick(e) {
       if (vault && id) {
         restoreItem(vault, id);
         const item = getItemById(vault, id);
-        addActivityToVault(vault, createActivity(ACTIONS.RESTORE_ITEM, item?.name, 'Restored from Recycle Bin'));
+        addActivityToVault(vault, createActivity(ACTIONS.RESTORE_ITEM, item?.name, 'Dipulihkan dari Tempat Sampah'));
         await persistVault();
-        showToast(`"${item?.name || 'Item'}" restored`, 'success');
+        showToast(`"${item?.name || 'Item'}" dipulihkan`, 'success');
         navigateTo('recycle', {}, false);
       }
       break;
@@ -654,9 +636,9 @@ async function handleGlobalClick(e) {
       const id = target.dataset.id;
       const name = target.dataset.name || 'this account';
       showModal(renderConfirmModal(
-        'Permanently Delete',
-        `Are you sure you want to permanently destroy <strong>${escapeHtml(name)}</strong>? <span style="color:var(--danger)">This action cannot be reversed.</span>`,
-        'Permanently Delete',
+        'Hapus Permanen',
+        `Apakah Anda yakin ingin menghancurkan secara permanen <strong>${escapeHtml(name)}</strong>? <span style="color:var(--danger)">Tindakan ini tidak dapat dibatalkan.</span>`,
+        'Hapus Permanen',
         `confirm-permanent-delete" data-id="${id}" data-name="${escapeHtml(name)}`
       ));
       break;
@@ -668,10 +650,10 @@ async function handleGlobalClick(e) {
       const name = target.dataset.name;
       if (vault && id) {
         permanentDeleteItem(vault, id);
-        addActivityToVault(vault, createActivity(ACTIONS.PERMANENT_DELETE, name, 'Permanently erased'));
+        addActivityToVault(vault, createActivity(ACTIONS.PERMANENT_DELETE, name, 'Dihapus secara permanen'));
         await persistVault();
         closeModal();
-        showToast(`"${name}" permanently deleted`, 'info');
+        showToast(`"${name}" dihapus secara permanen`, 'info');
         navigateTo('recycle', {}, false);
       }
       break;
@@ -694,7 +676,7 @@ async function handleGlobalClick(e) {
     case 'show-add-category': {
       e.preventDefault();
       showModal(renderInputModal(
-        'Add New Category',
+        'Tambah Kategori Baru',
         [
           { id: 'name', label: 'Category Name', placeholder: 'e.g., Subscriptions' },
           { id: 'icon', label: 'Icon / Emoji', placeholder: 'e.g., 💳, 🚀, 💼' }
@@ -713,7 +695,7 @@ async function handleGlobalClick(e) {
       const icon = iconInput?.value.trim() || '📁';
 
       if (!name) {
-        showToast('Please enter a category name', 'warning');
+        showToast('Silakan masukkan nama kategori', 'warning');
         return;
       }
 
@@ -721,7 +703,7 @@ async function handleGlobalClick(e) {
       addActivityToVault(vault, createActivity(ACTIONS.ADD_CATEGORY, name, `Added category ${icon} ${name}`));
       await persistVault();
       closeModal();
-      showToast(`Category "${name}" created!`, 'success');
+      showToast(`Category "${name}" dibuat!`, 'success');
       navigateTo('categories', {}, false);
       break;
     }
@@ -732,7 +714,7 @@ async function handleGlobalClick(e) {
       const catId = target.dataset.categoryId;
       const catName = target.dataset.categoryName || 'Category';
       showModal(renderConfirmModal(
-        'Remove Category',
+        'Hapus Kategori',
         `Are you sure you want to remove <strong>${escapeHtml(catName)}</strong>? Accounts in this category will not be deleted.`,
         'Remove',
         `confirm-delete-category" data-category-id="${catId}" data-category-name="${escapeHtml(catName)}`
@@ -748,7 +730,7 @@ async function handleGlobalClick(e) {
         removeCategory(vault, catId);
         await persistVault();
         closeModal();
-        showToast(`Category "${catName}" removed`, 'info');
+        showToast(`Category "${catName}" dihapus`, 'info');
         navigateTo('categories', {}, false);
       }
       break;
@@ -786,7 +768,7 @@ async function handleGlobalClick(e) {
 
       showModal(`
         <div class="modal-overlay" data-action="close-modal">
-          <div class="modal" onclick="event.stopPropagation()">
+          <div class="modal">
             <div class="modal-header">
               <h3 class="modal-title">⚠️ ${issueTitle} (${issueItems.length})</h3>
               <button class="btn-icon" data-action="close-modal"><i data-lucide="x"></i></button>
@@ -865,13 +847,13 @@ async function handleGlobalClick(e) {
     case 'show-change-password': {
       e.preventDefault();
       showModal(renderInputModal(
-        'Change Master Password',
+        'Ubah Kata Sandi Utama',
         [
-          { id: 'curr-pass', label: 'Current Master Password', type: 'password', placeholder: 'Enter current password' },
-          { id: 'new-pass', label: 'New Master Password', type: 'password', placeholder: 'At least 8 characters' },
-          { id: 'conf-pass', label: 'Confirm New Password', type: 'password', placeholder: 'Confirm new password' }
+          { id: 'curr-pass', label: 'Kata Sandi Utama Saat Ini', type: 'password', placeholder: 'Masukkan kata sandi saat ini' },
+          { id: 'new-pass', label: 'Kata Sandi Utama Baru', type: 'password', placeholder: 'Minimal 8 karakter' },
+          { id: 'conf-pass', label: 'Konfirmasi Kata Sandi Baru', type: 'password', placeholder: 'Konfirmasi kata sandi baru' }
         ],
-        'Update Password',
+        'Perbarui Kata Sandi',
         'submit-change-password'
       ));
       break;
@@ -884,31 +866,27 @@ async function handleGlobalClick(e) {
       const conf = document.getElementById('modal-conf-pass')?.value;
 
       if (!curr || !newP || !conf) {
-        showToast('Please fill in all password fields', 'warning');
+        showToast('Harap isi semua kolom kata sandi', 'warning');
         return;
       }
       if (newP.length < 8) {
-        showToast('New password must be at least 8 characters', 'warning');
+        showToast('Kata sandi baru minimal 8 karakter', 'warning');
         return;
       }
       if (newP !== conf) {
-        showToast('New passwords do not match', 'error');
+        showToast('Konfirmasi kata sandi tidak cocok', 'error');
         return;
       }
 
       try {
-        // Verify current password
         await unlockVault(curr);
-
-        // Derive and re-encrypt
         encryptionKey = await changeMasterPassword(newP, vault);
-        addActivityToVault(vault, createActivity(ACTIONS.CHANGE_PASSWORD, null, 'Changed master password'));
+        addActivityToVault(vault, createActivity(ACTIONS.CHANGE_PASSWORD, null, 'Kata sandi utama diubah'));
         await persistVault();
-
         closeModal();
-        showToast('Master password changed successfully!', 'success');
+        showToast('Kata sandi utama berhasil diperbarui!', 'success');
       } catch (err) {
-        showToast('Current master password is incorrect', 'error');
+        showToast('Kata sandi utama saat ini tidak benar', 'error');
       }
       break;
     }
@@ -917,23 +895,23 @@ async function handleGlobalClick(e) {
       e.preventDefault();
       const currentVal = vault?.settings?.autoLockMinutes ?? 5;
       showModal(renderInputModal(
-        'Auto Lock Timeout',
+        'Pengaturan Kunci Otomatis',
         [
           {
             id: 'autolock-val',
-            label: 'Inactivity Duration',
+            label: 'Durasi Tidak Aktif',
             type: 'select',
             options: [
-              { value: '1', label: '1 minute' },
-              { value: '5', label: '5 minutes (Recommended)' },
-              { value: '15', label: '15 minutes' },
-              { value: '30', label: '30 minutes' },
-              { value: '0', label: 'Never (Not recommended)' }
+              { value: '1', label: '1 menit' },
+              { value: '5', label: '5 menit (Disarankan)' },
+              { value: '15', label: '15 menit' },
+              { value: '30', label: '30 menit' },
+              { value: '0', label: 'Tidak pernah (Tidak disarankan)' }
             ],
             value: String(currentVal)
           }
         ],
-        'Save Timeout',
+        'Simpan Pengaturan',
         'submit-autolock-setting'
       ));
       const select = document.getElementById('modal-autolock-val');
@@ -950,7 +928,7 @@ async function handleGlobalClick(e) {
         await persistVault();
         resetAutoLockTimer();
         closeModal();
-        showToast(`Auto-lock set to ${val === 0 ? 'Never' : `${val} minutes`}`, 'success');
+        showToast(`Kunci otomatis diatur ke: ${val === 0 ? 'Tidak pernah' : `${val} menit`}`, 'success');
         navigateTo('settings', {}, false);
       }
       break;
@@ -960,23 +938,23 @@ async function handleGlobalClick(e) {
       e.preventDefault();
       const currentVal = vault?.settings?.passwordReminderDays ?? 180;
       showModal(renderInputModal(
-        'Password Age Reminder',
+        'Pengingat Usia Kata Sandi',
         [
           {
             id: 'reminder-val',
-            label: 'Remind me to change passwords after:',
+            label: 'Ingatkan untuk mengubah kata sandi setelah:',
             type: 'select',
             options: [
-              { value: '30', label: '30 days' },
-              { value: '90', label: '90 days' },
-              { value: '180', label: '180 days (Recommended)' },
-              { value: '365', label: '1 year' },
-              { value: '0', label: 'Never' }
+              { value: '30', label: '30 hari' },
+              { value: '90', label: '90 hari' },
+              { value: '180', label: '180 hari (Disarankan)' },
+              { value: '365', label: '1 tahun' },
+              { value: '0', label: 'Tidak pernah' }
             ],
             value: String(currentVal)
           }
         ],
-        'Save Reminder',
+        'Simpan Pengingat',
         'submit-reminder-setting'
       ));
       const select = document.getElementById('modal-reminder-val');
@@ -992,22 +970,17 @@ async function handleGlobalClick(e) {
         vault.settings.passwordReminderDays = val;
         await persistVault();
         closeModal();
-        showToast(`Reminder interval set to ${val === 0 ? 'Never' : `${val} days`}`, 'success');
+        showToast(`Pengingat diatur ke: ${val === 0 ? 'Tidak pernah' : `${val} hari`}`, 'success');
         navigateTo('settings', {}, false);
       }
       break;
     }
 
-    case 'load-sample-data': {
-      e.preventDefault();
-      loadSampleData();
-      showToast('Loaded 4 realistic demo accounts!', 'success');
-      navigateTo('dashboard', {}, false);
-      break;
-    }
-
     case 'close-modal': {
       e.preventDefault();
+      // Jika dipicu oleh lapisan latar (overlay), tutup hanya saat klik tepat pada
+      // latar tersebut — bukan saat klik di dalam konten modal (input, label, padding).
+      if (target.classList.contains('modal-overlay') && e.target !== target) return;
       closeModal();
       break;
     }
@@ -1167,9 +1140,6 @@ async function handleGlobalSubmit(e) {
       vault = createEmptyVault(name);
       encryptionKey = await initializeVault(password, vault);
 
-      // Automatically load demo sample items so the app is instantly rich and demonstrative!
-      loadSampleData();
-
       const authScreen = document.getElementById('auth-screen');
       const appScreen = document.getElementById('app');
 
@@ -1178,7 +1148,7 @@ async function handleGlobalSubmit(e) {
 
       resetAutoLockTimer();
       navigateTo('dashboard', {}, false);
-      showToast(`Personal Vault initialized! Welcome, ${name}.`, 'success');
+      showToast(`Brankas berhasil dibuat! Selamat datang, ${name}.`, 'success');
 
     } catch (err) {
       console.error('Error creating vault:', err);

@@ -30,7 +30,7 @@ export function renderSidebar(vault, currentPage) {
       <div class="sidebar-section">
         <div class="sidebar-link ${currentPage === 'dashboard' ? 'active' : ''}" data-action="navigate" data-page="dashboard">
           <i data-lucide="layout-dashboard"></i>
-          <span>Dashboard</span>
+          <span>Beranda</span>
         </div>
       </div>
 
@@ -38,16 +38,16 @@ export function renderSidebar(vault, currentPage) {
         <div class="sidebar-section-title">Vault</div>
         <div class="sidebar-link ${currentPage === 'vault' ? 'active' : ''}" data-action="navigate" data-page="vault">
           <i data-lucide="key-round"></i>
-          <span>All Accounts</span>
+          <span>Semua Akun</span>
           <span class="badge badge-accent">${activeItems.length}</span>
         </div>
         <div class="sidebar-link ${currentPage === 'favorites' ? 'active' : ''}" data-action="navigate" data-page="favorites">
           <i data-lucide="star"></i>
-          <span>Favorites</span>
+          <span>Favorit</span>
         </div>
         <div class="sidebar-link ${currentPage === 'categories' ? 'active' : ''}" data-action="navigate" data-page="categories">
           <i data-lucide="folder"></i>
-          <span>Categories</span>
+          <span>Kategori</span>
         </div>
       </div>
 
@@ -55,11 +55,11 @@ export function renderSidebar(vault, currentPage) {
         <div class="sidebar-section-title">Tools</div>
         <div class="sidebar-link ${currentPage === 'generator' ? 'active' : ''}" data-action="navigate" data-page="generator">
           <i data-lucide="wand-2"></i>
-          <span>Password Generator</span>
+          <span>Pembuat Kata Sandi</span>
         </div>
         <div class="sidebar-link ${currentPage === 'security' ? 'active' : ''}" data-action="navigate" data-page="security">
           <i data-lucide="shield-alert"></i>
-          <span>Security Center</span>
+          <span>Pusat Keamanan</span>
           ${totalIssues > 0 ? `<span class="badge badge-warning">${totalIssues}</span>` : ''}
         </div>
       </div>
@@ -68,11 +68,11 @@ export function renderSidebar(vault, currentPage) {
         <div class="sidebar-section-title">History</div>
         <div class="sidebar-link ${currentPage === 'activity' ? 'active' : ''}" data-action="navigate" data-page="activity">
           <i data-lucide="clock"></i>
-          <span>Activity Log</span>
+          <span>Log Aktivitas</span>
         </div>
         <div class="sidebar-link ${currentPage === 'recycle' ? 'active' : ''}" data-action="navigate" data-page="recycle">
           <i data-lucide="trash-2"></i>
-          <span>Recycle Bin</span>
+          <span>Tempat Sampah</span>
           ${deletedItems.length > 0 ? `<span class="badge badge-danger">${deletedItems.length}</span>` : ''}
         </div>
       </div>
@@ -80,7 +80,7 @@ export function renderSidebar(vault, currentPage) {
       <div class="sidebar-section">
         <div class="sidebar-link ${currentPage === 'settings' ? 'active' : ''}" data-action="navigate" data-page="settings">
           <i data-lucide="settings"></i>
-          <span>Settings</span>
+          <span>Pengaturan</span>
         </div>
       </div>
     </nav>
@@ -88,7 +88,7 @@ export function renderSidebar(vault, currentPage) {
     <div class="sidebar-footer">
       <div class="sidebar-link" data-action="lock-vault">
         <i data-lucide="lock"></i>
-        <span>Lock Vault</span>
+        <span>Kunci Brankas</span>
       </div>
     </div>
   `;
@@ -98,15 +98,17 @@ export function renderSidebar(vault, currentPage) {
 /* ==================== BOTTOM NAV ==================== */
 
 export function renderBottomNav(currentPage) {
+  const morePages = ['favorites', 'categories', 'generator', 'activity', 'recycle', 'settings'];
+  const isMoreActive = morePages.includes(currentPage);
   return `
     <div class="bottom-nav-inner">
       <div class="bottom-nav-item ${currentPage === 'dashboard' ? 'active' : ''}" data-action="navigate" data-page="dashboard">
         <i data-lucide="layout-dashboard"></i>
-        <span>Home</span>
+        <span>Beranda</span>
       </div>
       <div class="bottom-nav-item ${currentPage === 'vault' ? 'active' : ''}" data-action="navigate" data-page="vault">
         <i data-lucide="key-round"></i>
-        <span>Vault</span>
+        <span>Brankas</span>
       </div>
       <div class="bottom-nav-item add-btn" data-action="navigate" data-page="add">
         <div class="nav-icon-wrap">
@@ -115,11 +117,53 @@ export function renderBottomNav(currentPage) {
       </div>
       <div class="bottom-nav-item ${currentPage === 'security' ? 'active' : ''}" data-action="navigate" data-page="security">
         <i data-lucide="shield-check"></i>
-        <span>Security</span>
+        <span>Keamanan</span>
       </div>
-      <div class="bottom-nav-item ${currentPage === 'settings' ? 'active' : ''}" data-action="navigate" data-page="settings">
-        <i data-lucide="settings"></i>
-        <span>Settings</span>
+      <div class="bottom-nav-item ${isMoreActive ? 'active' : ''}" data-action="open-more-menu">
+        <i data-lucide="grid-2x2"></i>
+        <span>Lainnya</span>
+      </div>
+    </div>
+  `;
+}
+
+/* ==================== MORE MENU (MOBILE DRAWER) ==================== */
+
+export function renderMoreMenuDrawer(currentPage, deletedCount = 0) {
+  return `
+    <div class="more-menu-overlay" data-action="close-more-menu"></div>
+    <div class="more-menu-drawer animate-slideUp">
+      <div class="more-menu-handle"></div>
+      <div class="more-menu-title">Menu Lainnya</div>
+      <div class="more-menu-grid">
+        <div class="more-menu-item ${currentPage === 'favorites' ? 'active' : ''}" data-action="navigate-more" data-page="favorites">
+          <div class="more-menu-icon yellow"><i data-lucide="star"></i></div>
+          <span>Favorit</span>
+        </div>
+        <div class="more-menu-item ${currentPage === 'categories' ? 'active' : ''}" data-action="navigate-more" data-page="categories">
+          <div class="more-menu-icon blue"><i data-lucide="folder"></i></div>
+          <span>Kategori</span>
+        </div>
+        <div class="more-menu-item ${currentPage === 'generator' ? 'active' : ''}" data-action="navigate-more" data-page="generator">
+          <div class="more-menu-icon purple"><i data-lucide="wand-2"></i></div>
+          <span>Generator</span>
+        </div>
+        <div class="more-menu-item ${currentPage === 'activity' ? 'active' : ''}" data-action="navigate-more" data-page="activity">
+          <div class="more-menu-icon green"><i data-lucide="clock"></i></div>
+          <span>Log Aktivitas</span>
+        </div>
+        <div class="more-menu-item ${currentPage === 'recycle' ? 'active' : ''}" data-action="navigate-more" data-page="recycle">
+          <div class="more-menu-icon red"><i data-lucide="trash-2"></i></div>
+          <span>Tempat Sampah ${deletedCount > 0 ? `<span class="more-menu-badge">${deletedCount}</span>` : ''}</span>
+        </div>
+        <div class="more-menu-item ${currentPage === 'settings' ? 'active' : ''}" data-action="navigate-more" data-page="settings">
+          <div class="more-menu-icon gray"><i data-lucide="settings"></i></div>
+          <span>Pengaturan</span>
+        </div>
+        <div class="more-menu-item" data-action="lock-vault">
+          <div class="more-menu-icon gray"><i data-lucide="lock"></i></div>
+          <span>Kunci Brankas</span>
+        </div>
       </div>
     </div>
   `;
@@ -136,13 +180,13 @@ export function renderAuthScreen(isInitialized) {
         <div class="auth-icon" id="auth-icon">
           <i data-lucide="lock-keyhole"></i>
         </div>
-        <h1 class="auth-title">Personal Vault</h1>
-        <p class="auth-subtitle">Your digital world, secured privately.</p>
+        <h1 class="auth-title">Brankas Akun Digital</h1>
+        <p class="auth-subtitle">Brankas Anda terkunci. Masukkan kata sandi utama untuk membuka.</p>
         <form class="auth-form" id="auth-form">
           <div class="input-group">
-            <label class="input-label" for="master-password">Master Password</label>
+            <label class="input-label" for="master-password">Kata Sandi Utama</label>
             <div class="input-wrap">
-              <input type="password" id="master-password" class="input-field" placeholder="Enter your master password" autocomplete="current-password" autofocus>
+              <input type="password" id="master-password" class="input-field" placeholder="Masukkan kata sandi utama Anda" autocomplete="current-password" autofocus>
               <div class="input-action">
                 <button type="button" class="btn-icon" data-action="toggle-password-visibility" data-target="master-password">
                   <i data-lucide="eye"></i>
@@ -153,10 +197,16 @@ export function renderAuthScreen(isInitialized) {
           <div class="auth-error" id="auth-error"></div>
           <button type="submit" class="btn btn-primary btn-lg btn-block">
             <i data-lucide="lock-open"></i>
-            <span>Unlock</span>
+            <span>Buka Kunci</span>
           </button>
         </form>
-        <p class="auth-footer">All data is encrypted locally on your device.</p>
+        <div class="auth-reset-section">
+          <p class="auth-footer">Semua data dienkripsi secara lokal di perangkat Anda.</p>
+          <button type="button" class="btn-reset-vault" data-action="show-reset-confirm">
+            <i data-lucide="rotate-ccw"></i>
+            Lupa kata sandi? Reset Brankas
+          </button>
+        </div>
       </div>
     `;
   }
@@ -168,19 +218,19 @@ export function renderAuthScreen(isInitialized) {
       <div class="auth-icon">
         <i data-lucide="shield-plus"></i>
       </div>
-      <h1 class="auth-title">Create Your Vault</h1>
-      <p class="auth-subtitle">Set a master password to protect your data. Make it strong — this is the only password you need to remember.</p>
+      <h1 class="auth-title">Buat Brankas Anda</h1>
+      <p class="auth-subtitle">Atur kata sandi utama untuk melindungi data Anda. Buat yang kuat — ini adalah satu-satunya kata sandi yang perlu Anda ingat.</p>
       <form class="auth-form" id="setup-form">
         <div class="input-group">
-          <label class="input-label" for="setup-name">Your Name</label>
+          <label class="input-label" for="setup-name">Nama Anda</label>
           <div class="input-wrap">
-            <input type="text" id="setup-name" class="input-field" placeholder="Enter your name" autocomplete="off">
+            <input type="text" id="setup-name" class="input-field" placeholder="Masukkan nama Anda" autocomplete="off" autofocus>
           </div>
         </div>
         <div class="input-group">
-          <label class="input-label" for="setup-password">Master Password</label>
+          <label class="input-label" for="setup-password">Kata Sandi Utama</label>
           <div class="input-wrap">
-            <input type="password" id="setup-password" class="input-field" placeholder="Create a strong password" autocomplete="new-password">
+            <input type="password" id="setup-password" class="input-field" placeholder="Buat kata sandi yang kuat (min. 8 karakter)" autocomplete="new-password">
             <div class="input-action">
               <button type="button" class="btn-icon" data-action="toggle-password-visibility" data-target="setup-password">
                 <i data-lucide="eye"></i>
@@ -192,9 +242,9 @@ export function renderAuthScreen(isInitialized) {
           </div>
         </div>
         <div class="input-group">
-          <label class="input-label" for="setup-confirm">Confirm Password</label>
+          <label class="input-label" for="setup-confirm">Konfirmasi Kata Sandi</label>
           <div class="input-wrap">
-            <input type="password" id="setup-confirm" class="input-field" placeholder="Confirm your password" autocomplete="new-password">
+            <input type="password" id="setup-confirm" class="input-field" placeholder="Konfirmasi kata sandi Anda" autocomplete="new-password">
             <div class="input-action">
               <button type="button" class="btn-icon" data-action="toggle-password-visibility" data-target="setup-confirm">
                 <i data-lucide="eye"></i>
@@ -205,13 +255,42 @@ export function renderAuthScreen(isInitialized) {
         <div class="auth-error" id="auth-error"></div>
         <button type="submit" class="btn btn-primary btn-lg btn-block">
           <i data-lucide="shield-check"></i>
-          <span>Create Vault</span>
+          <span>Buat Brankas</span>
         </button>
       </form>
-      <p class="auth-footer">Your data never leaves this device.</p>
+      <p class="auth-footer">🔒 Data Anda tidak akan pernah meninggalkan perangkat ini. Enkripsi AES-256.</p>
     </div>
   `;
 }
+
+/* ==================== RESET VAULT CONFIRM ==================== */
+
+export function renderResetConfirmScreen() {
+  return `
+    <div class="auth-bg"></div>
+    <div class="auth-card" id="auth-card">
+      <div class="auth-icon" style="background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger);">
+        <i data-lucide="alert-triangle"></i>
+      </div>
+      <h1 class="auth-title" style="color: var(--danger);">Reset Brankas</h1>
+      <p class="auth-subtitle">⚠️ Tindakan ini akan <strong>menghapus permanen</strong> semua akun dan data yang tersimpan. Brankas akan dikosongkan dan Anda perlu membuat kata sandi baru.</p>
+      <div class="auth-reset-confirm-box">
+        <p class="text-sm text-muted" style="margin-bottom: var(--sp-3);">Ketik <strong>RESET</strong> di bawah ini untuk mengkonfirmasi:</p>
+        <input type="text" id="reset-confirm-input" class="input-field" placeholder="Ketik RESET di sini" autocomplete="off" style="text-align: center; letter-spacing: 4px; font-weight: 700;">
+      </div>
+      <div class="flex gap-3 mt-4" style="width: 100%;">
+        <button type="button" class="btn btn-secondary" style="flex:1" data-action="cancel-reset">
+          <i data-lucide="arrow-left"></i> Batal
+        </button>
+        <button type="button" class="btn btn-danger" style="flex:1" data-action="confirm-hard-reset" id="btn-confirm-reset" disabled>
+          <i data-lucide="trash-2"></i> Hapus Semua
+        </button>
+      </div>
+      <p class="auth-footer" style="color: var(--danger); opacity: 0.7;">Tindakan ini tidak dapat dibatalkan!</p>
+    </div>
+  `;
+}
+
 
 
 /* ==================== DASHBOARD ==================== */
@@ -241,9 +320,9 @@ export function renderDashboard(vault) {
         <div class="dashboard-attention-header">
           <span class="dashboard-attention-title">
             <i data-lucide="alert-triangle"></i>
-            ${totalIssues} account${totalIssues > 1 ? 's' : ''} need your attention
+            ${totalIssues} akun butuh perhatian Anda
           </span>
-          <span class="dashboard-section-link" data-action="navigate" data-page="security">View all</span>
+          <span class="dashboard-section-link" data-action="navigate" data-page="security">Lihat semua</span>
         </div>
         <div class="card">
           ${attentionItems}
@@ -259,7 +338,7 @@ export function renderDashboard(vault) {
       <div class="dashboard-favorites">
         <div class="dashboard-section-header">
           <span class="dashboard-section-title">⭐ Favorites</span>
-          <span class="dashboard-section-link" data-action="navigate" data-page="favorites">View all</span>
+          <span class="dashboard-section-link" data-action="navigate" data-page="favorites">Lihat semua</span>
         </div>
         <div class="account-list">${favItems}</div>
       </div>
@@ -270,24 +349,24 @@ export function renderDashboard(vault) {
     <div class="page-inner animate-fadeIn">
       <div class="dashboard-greeting">
         <h2>${getGreeting()}, ${escapeHtml(vault.settings.userName)} 👋</h2>
-        <p class="text-secondary">Your vault is ${securityScore >= 80 ? 'healthy & secure' : 'in need of attention'}. Last updated ${timeAgo(vault.updatedAt)}.</p>
+        <p class="text-secondary">Brankas Anda ${securityScore >= 80 ? 'sehat & aman' : 'butuh perhatian'}. Terakhir diperbarui ${timeAgo(vault.updatedAt)}.</p>
       </div>
 
       <div class="search-bar search-bar-lg">
         <i data-lucide="search"></i>
-        <input type="text" class="input-field" placeholder="Search your vault..." data-action="global-search" id="dashboard-search">
+        <input type="text" class="input-field" placeholder="Cari di brankas..." data-action="global-search" id="dashboard-search">
       </div>
 
       <div class="dashboard-stats">
         <div class="card stat-card">
           <div class="stat-card-icon purple"><i data-lucide="key-round"></i></div>
           <div class="stat-card-value">${activeItems.length}</div>
-          <div class="stat-card-label">Accounts</div>
+          <div class="stat-card-label">Akun</div>
         </div>
         <div class="card stat-card card-clickable" data-action="navigate" data-page="security">
           <div class="stat-card-icon green"><i data-lucide="shield-check"></i></div>
           <div class="stat-card-value" style="color: ${scoreColor}">${securityScore}%</div>
-          <div class="stat-card-label">Security Score</div>
+          <div class="stat-card-label">Skor Keamanan</div>
         </div>
         <div class="card stat-card card-clickable" data-action="navigate" data-page="categories">
           <div class="stat-card-icon yellow"><i data-lucide="folder"></i></div>
@@ -302,10 +381,10 @@ export function renderDashboard(vault) {
       ${activeItems.length === 0 ? `
         <div class="empty-state">
           <div class="empty-state-icon"><i data-lucide="plus-circle"></i></div>
-          <div class="empty-state-title">Your vault is empty</div>
-          <div class="empty-state-desc">Start by adding your first account to keep it safe and organized.</div>
+          <div class="empty-state-title">Brankas Anda kosong</div>
+          <div class="empty-state-desc">Mulailah dengan menambahkan akun pertama Anda agar tetap aman dan teratur.</div>
           <button class="btn btn-primary" data-action="navigate" data-page="add">
-            <i data-lucide="plus"></i> Add First Account
+            <i data-lucide="plus"></i> Tambah Akun Pertama
           </button>
         </div>
       ` : ''}
@@ -342,15 +421,15 @@ export function renderVaultPage(vault, searchQuery = '', sortBy = 'name', filter
     ? `<div class="account-list">${items.map(i => renderAccountItem(i, vault)).join('')}</div>`
     : `<div class="empty-state">
         <div class="empty-state-icon"><i data-lucide="search"></i></div>
-        <div class="empty-state-title">${searchQuery ? 'No results found' : 'No accounts yet'}</div>
-        <div class="empty-state-desc">${searchQuery ? 'Try a different search term.' : 'Add your first account to get started.'}</div>
-        ${!searchQuery ? '<button class="btn btn-primary" data-action="navigate" data-page="add"><i data-lucide="plus"></i> Add Account</button>' : ''}
+        <div class="empty-state-title">${searchQuery ? 'Tidak ada hasil' : 'Belum ada akun'}</div>
+        <div class="empty-state-desc">${searchQuery ? 'Coba kata kunci lain.' : 'Tambahkan akun pertama Anda untuk memulai.'}</div>
+        ${!searchQuery ? '<button class="btn btn-primary" data-action="navigate" data-page="add"><i data-lucide="plus"></i> Tambah Akun</button>' : ''}
       </div>`;
 
   return `
     <div class="page-inner animate-fadeIn">
       <div class="page-header">
-        <h2 class="page-title">All Accounts</h2>
+        <h2 class="page-title">All Akun</h2>
         <button class="btn btn-primary" data-action="navigate" data-page="add">
           <i data-lucide="plus"></i> Add
         </button>
@@ -358,28 +437,28 @@ export function renderVaultPage(vault, searchQuery = '', sortBy = 'name', filter
 
       <div class="search-bar">
         <i data-lucide="search"></i>
-        <input type="text" class="input-field" placeholder="Search accounts..." id="vault-search" value="${escapeHtml(searchQuery)}" data-action="vault-search">
+        <input type="text" class="input-field" placeholder="Cari akun..." id="vault-search" value="${escapeHtml(searchQuery)}" data-action="vault-search">
       </div>
 
       <div class="vault-filters flex items-center justify-between gap-3 mb-4" style="flex-wrap: wrap;">
         <div class="flex items-center gap-2" style="flex-wrap: wrap;">
           <div class="select-wrap" style="width: auto; min-width: 150px;">
             <select id="vault-sort" class="select-field" style="padding: var(--sp-2) var(--sp-4); font-size: var(--fs-xs);" data-action="vault-sort">
-              <option value="name" ${sortBy === 'name' ? 'selected' : ''}>Sort: Name (A-Z)</option>
-              <option value="recent" ${sortBy === 'recent' ? 'selected' : ''}>Sort: Recently Updated</option>
-              <option value="created" ${sortBy === 'created' ? 'selected' : ''}>Sort: Date Added</option>
+              <option value="name" ${sortBy === 'name' ? 'selected' : ''}>Urutkan: Nama (A-Z)</option>
+              <option value="recent" ${sortBy === 'recent' ? 'selected' : ''}>Urutkan: Baru Diperbarui</option>
+              <option value="created" ${sortBy === 'created' ? 'selected' : ''}>Urutkan: Tanggal Ditambahkan</option>
             </select>
           </div>
           <div class="select-wrap" style="width: auto; min-width: 150px;">
             <select id="vault-category-filter" class="select-field" style="padding: var(--sp-2) var(--sp-4); font-size: var(--fs-xs);" data-action="vault-category-select">
-              <option value="">All Categories</option>
+              <option value="">Semua Kategori</option>
               ${vault.categories.map(c => `<option value="${c.id}" ${filterCategory === c.id ? 'selected' : ''}>${c.icon} ${escapeHtml(c.name)}</option>`).join('')}
             </select>
           </div>
         </div>
         ${filterCategory ? `
           <button class="btn btn-ghost btn-sm text-xs" data-action="clear-category-filter">
-            <i data-lucide="x"></i> Clear Category
+            <i data-lucide="x"></i> Hapus Kategori
           </button>
         ` : ''}
       </div>
@@ -419,7 +498,7 @@ function renderAccountItem(item, vault) {
 
 export function renderDetailPage(item, vault) {
   if (!item) {
-    return `<div class="page-inner"><div class="empty-state"><div class="empty-state-title">Account not found</div></div></div>`;
+    return `<div class="page-inner"><div class="empty-state"><div class="empty-state-title">Akun tidak ditemukan</div></div></div>`;
   }
 
   const cat = getCategoryById(vault, item.category);
@@ -435,12 +514,12 @@ export function renderDetailPage(item, vault) {
     fieldsHtml += renderDetailField('Username', item.username, 'user', item.username, false);
   }
 
-  // Password
+  // Kata Sandi
   if (item.password) {
     fieldsHtml += `
       <div class="detail-field">
         <div class="detail-field-info">
-          <div class="detail-field-label">Password</div>
+          <div class="detail-field-label">Kata Sandi</div>
           <div class="detail-field-value password-masked password-blurred" id="pw-display-${item.id}">
             ${escapeHtml(item.password)}
           </div>
@@ -453,7 +532,7 @@ export function renderDetailPage(item, vault) {
           <button class="btn-icon" data-action="reveal-password" data-id="${item.id}" title="Show password">
             <i data-lucide="eye"></i>
           </button>
-          <button class="btn-icon" data-action="copy" data-value="${escapeHtml(item.password)}" data-label="Password" data-item-name="${escapeHtml(item.name)}" title="Copy password">
+          <button class="btn-icon" data-action="copy" data-value="${escapeHtml(item.password)}" data-label="Kata Sandi" data-item-name="${escapeHtml(item.name)}" title="Copy password">
             <i data-lucide="clipboard"></i>
           </button>
         </div>
@@ -461,19 +540,19 @@ export function renderDetailPage(item, vault) {
     `;
   }
 
-  // Website
+  // Situs Web
   if (item.website) {
     fieldsHtml += `
       <div class="detail-field">
         <div class="detail-field-info">
-          <div class="detail-field-label">Website</div>
+          <div class="detail-field-label">Situs Web</div>
           <div class="detail-field-value">${escapeHtml(domain)}</div>
         </div>
         <div class="detail-field-actions">
           <a href="${item.website.startsWith('http') ? item.website : 'https://' + item.website}" target="_blank" rel="noopener" class="btn-icon" title="Open website">
             <i data-lucide="external-link"></i>
           </a>
-          <button class="btn-icon" data-action="copy" data-value="${escapeHtml(item.website)}" data-label="Website" title="Copy URL">
+          <button class="btn-icon" data-action="copy" data-value="${escapeHtml(item.website)}" data-label="Situs Web" title="Copy URL">
             <i data-lucide="clipboard"></i>
           </button>
         </div>
@@ -486,7 +565,7 @@ export function renderDetailPage(item, vault) {
   if (item.customFields && item.customFields.length > 0) {
     customFieldsHtml = `
       <div class="detail-section">
-        <div class="detail-section-title">Additional Information</div>
+        <div class="detail-section-title">Informasi Tambahan</div>
         ${item.customFields.map(field => {
           if (field.isSensitive) {
             return `
@@ -514,12 +593,12 @@ export function renderDetailPage(item, vault) {
     `;
   }
 
-  // Notes
+  // Catatan
   let notesHtml = '';
   if (item.notes) {
     notesHtml = `
       <div class="detail-section">
-        <div class="detail-section-title">Notes</div>
+        <div class="detail-section-title">Catatan</div>
         <div class="card" style="padding: var(--sp-4)">
           <div class="text-sm text-secondary" style="white-space: pre-wrap;">${escapeHtml(item.notes)}</div>
         </div>
@@ -570,8 +649,8 @@ export function renderDetailPage(item, vault) {
 
       <div class="detail-section">
         <div class="text-xs text-muted" style="text-align:center;">
-          Created ${formatDate(item.createdAt)} · Updated ${timeAgo(item.updatedAt)}
-          ${item.passwordChangedAt ? `<br>Password last changed ${timeAgo(item.passwordChangedAt)}` : ''}
+          Dibuat ${formatDate(item.createdAt)} · Diperbarui ${timeAgo(item.updatedAt)}
+          ${item.passwordChangedAt ? `<br>Kata sandi terakhir diubah ${timeAgo(item.passwordChangedAt)}` : ''}
         </div>
       </div>
 
@@ -580,7 +659,7 @@ export function renderDetailPage(item, vault) {
           <i data-lucide="edit-3"></i> Edit
         </button>
         <button class="btn btn-danger" style="flex:1" data-action="delete-item" data-id="${item.id}" data-name="${escapeHtml(item.name)}">
-          <i data-lucide="trash-2"></i> Delete
+          <i data-lucide="trash-2"></i> Hapus
         </button>
       </div>
     </div>
@@ -646,16 +725,16 @@ export function renderAddEditPage(vault, existingItem = null) {
           <div class="page-back-btn" data-action="go-back">
             <i data-lucide="arrow-left"></i>
           </div>
-          <h2 class="page-title">${isEdit ? 'Edit Account' : 'Add New Account'}</h2>
+          <h2 class="page-title">${isEdit ? 'Edit Akun' : 'Tambah Akun Baru'}</h2>
         </div>
       </div>
 
       <form id="item-form">
         <div class="form-section">
-          <div class="form-section-title">Basic Information</div>
+          <div class="form-section-title">Informasi Dasar</div>
           <div class="form-grid">
             <div class="input-group">
-              <label class="input-label" for="item-name">Account Name *</label>
+              <label class="input-label" for="item-name">Nama Akun *</label>
               <input type="text" id="item-name" class="input-field" placeholder="e.g., Facebook" value="${escapeHtml(item.name)}" required>
             </div>
 
@@ -663,26 +742,26 @@ export function renderAddEditPage(vault, existingItem = null) {
               <label class="input-label" for="item-category">Category</label>
               <div class="select-wrap">
                 <select id="item-category" class="select-field">
-                  <option value="">Select category</option>
+                  <option value="">Pilih kategori</option>
                   ${categoriesOptions}
                 </select>
               </div>
             </div>
 
             <div class="input-group">
-              <label class="input-label" for="item-username">Username / Email</label>
+              <label class="input-label" for="item-username">Nama Pengguna / Email</label>
               <input type="text" id="item-username" class="input-field" placeholder="e.g., user@gmail.com" value="${escapeHtml(item.username)}">
             </div>
 
             <div class="input-group">
-              <label class="input-label" for="item-password">Password</label>
+              <label class="input-label" for="item-password">Kata Sandi</label>
               <div class="input-wrap">
-                <input type="password" id="item-password" class="input-field" placeholder="Enter password" value="${escapeHtml(item.password)}">
+                <input type="password" id="item-password" class="input-field" placeholder="Masukkan kata sandi" value="${escapeHtml(item.password)}">
                 <div class="input-action">
                   <button type="button" class="btn-icon" data-action="toggle-password-visibility" data-target="item-password" title="Show/Hide">
                     <i data-lucide="eye"></i>
                   </button>
-                  <button type="button" class="btn-icon" data-action="generate-inline" title="Generate password" style="color: var(--accent);">
+                  <button type="button" class="btn-icon" data-action="generate-inline" title="Buat password" style="color: var(--accent);">
                     <i data-lucide="wand-2"></i>
                   </button>
                 </div>
@@ -693,32 +772,32 @@ export function renderAddEditPage(vault, existingItem = null) {
             </div>
 
             <div class="input-group">
-              <label class="input-label" for="item-website">Website</label>
+              <label class="input-label" for="item-website">Situs Web</label>
               <input type="text" id="item-website" class="input-field" placeholder="e.g., facebook.com" value="${escapeHtml(item.website)}">
             </div>
           </div>
         </div>
 
         <div class="form-section">
-          <div class="form-section-title">Custom Fields</div>
+          <div class="form-section-title">Kolom Kustom</div>
           <div id="custom-fields-container" class="form-grid">
             ${customFieldsHtml}
           </div>
           <button type="button" class="btn btn-ghost mt-4" data-action="add-custom-field">
-            <i data-lucide="plus"></i> Add Custom Field
+            <i data-lucide="plus"></i> Tambah Kolom Kustom
           </button>
         </div>
 
         <div class="form-section">
-          <div class="form-section-title">Notes</div>
-          <textarea id="item-notes" class="input-field" placeholder="Any additional notes..." rows="3">${escapeHtml(item.notes)}</textarea>
+          <div class="form-section-title">Catatan</div>
+          <textarea id="item-notes" class="input-field" placeholder="Catatan tambahan..." rows="3">${escapeHtml(item.notes)}</textarea>
         </div>
 
         <div class="flex gap-3 mt-6">
           <button type="submit" class="btn btn-primary" style="flex:1">
-            <i data-lucide="save"></i> ${isEdit ? 'Save Changes' : 'Save Account'}
+            <i data-lucide="save"></i> ${isEdit ? 'Simpan Perubahan' : 'Simpan Akun'}
           </button>
-          <button type="button" class="btn btn-secondary" data-action="go-back">Cancel</button>
+          <button type="button" class="btn btn-secondary" data-action="go-back">Batal</button>
         </div>
 
         ${isEdit ? `<input type="hidden" id="item-id" value="${item.id}">` : ''}
@@ -736,11 +815,11 @@ export function renderGeneratorPage(options = null) {
   return `
     <div class="page-inner animate-fadeIn">
       <div class="page-header">
-        <h2 class="page-title">Password Generator</h2>
+        <h2 class="page-title">Pembuat Kata Sandi</h2>
       </div>
 
       <div class="generator-output">
-        <div class="generator-password" id="gen-password">Click Generate</div>
+        <div class="generator-password" id="gen-password">Klik Buat</div>
         <button class="btn-icon" data-action="copy-generated" title="Copy password">
           <i data-lucide="clipboard"></i>
         </button>
@@ -750,7 +829,7 @@ export function renderGeneratorPage(options = null) {
         <div class="generator-options">
           <div class="generator-length">
             <div class="generator-length-header">
-              <span class="input-label">Length</span>
+              <span class="input-label">Panjang</span>
               <span class="generator-length-value" id="gen-length-value">${opts.length}</span>
             </div>
             <input type="range" class="range-slider" id="gen-length" min="6" max="64" value="${opts.length}" data-action="gen-update">
@@ -760,33 +839,33 @@ export function renderGeneratorPage(options = null) {
             <label class="checkbox">
               <input type="checkbox" id="gen-upper" ${opts.uppercase ? 'checked' : ''} data-action="gen-update">
               <span class="checkbox-box"></span>
-              ABC Uppercase
+              ABC Huruf Besar
             </label>
             <label class="checkbox">
               <input type="checkbox" id="gen-lower" ${opts.lowercase ? 'checked' : ''} data-action="gen-update">
               <span class="checkbox-box"></span>
-              abc Lowercase
+              abc Huruf Kecil
             </label>
             <label class="checkbox">
               <input type="checkbox" id="gen-numbers" ${opts.numbers ? 'checked' : ''} data-action="gen-update">
               <span class="checkbox-box"></span>
-              123 Numbers
+              123 Angka
             </label>
             <label class="checkbox">
               <input type="checkbox" id="gen-symbols" ${opts.symbols ? 'checked' : ''} data-action="gen-update">
               <span class="checkbox-box"></span>
-              !@# Symbols
+              !@# Simbol
             </label>
           </div>
 
           <label class="checkbox">
             <input type="checkbox" id="gen-ambiguous" ${opts.avoidAmbiguous ? 'checked' : ''} data-action="gen-update">
             <span class="checkbox-box"></span>
-            Avoid ambiguous characters (I, l, 1, O, 0)
+            Hindari karakter ambigu (I, l, 1, O, 0)
           </label>
 
           <button class="btn btn-primary btn-block" data-action="generate-password">
-            <i data-lucide="refresh-cw"></i> Generate
+            <i data-lucide="refresh-cw"></i> Buat
           </button>
         </div>
       </div>
@@ -805,7 +884,7 @@ export function renderCategoriesPage(vault) {
       <div class="category-card-icon">${cat.icon}</div>
       <div class="category-card-name">${escapeHtml(cat.name)}</div>
       <div class="category-card-count">${counts[cat.id] || 0} accounts</div>
-      ${!cat.isDefault ? `<button class="btn btn-ghost btn-sm text-danger mt-2" data-action="delete-category" data-category-id="${cat.id}" data-category-name="${escapeHtml(cat.name)}" onclick="event.stopPropagation()">Remove</button>` : ''}
+      ${!cat.isDefault ? `<button class="btn btn-ghost btn-sm text-danger mt-2" data-action="delete-category" data-category-id="${cat.id}" data-category-name="${escapeHtml(cat.name)}">Hapus</button>` : ''}
     </div>
   `).join('');
 
@@ -997,7 +1076,7 @@ export function renderRecyclePage(vault) {
         <div class="empty-state">
           <div class="empty-state-icon"><i data-lucide="trash-2"></i></div>
           <div class="empty-state-title">Recycle bin is empty</div>
-          <div class="empty-state-desc">Deleted accounts will appear here for 30 days.</div>
+          <div class="empty-state-desc">Akun yang dihapus akan muncul di sini selama 30 hari.</div>
         </div>
       </div>
     `;
@@ -1008,7 +1087,7 @@ export function renderRecyclePage(vault) {
       <div class="account-avatar ${getAvatarClass(item.name)}">${getInitials(item.name)}</div>
       <div class="recycle-item-info">
         <div class="recycle-item-name">${escapeHtml(item.name)}</div>
-        <div class="recycle-item-date">Deleted ${timeAgo(item.deletedAt)}</div>
+        <div class="recycle-item-date">Dihapus ${timeAgo(item.deletedAt)}</div>
       </div>
       <div class="recycle-item-actions">
         <button class="btn btn-ghost btn-sm" data-action="restore-item" data-id="${item.id}">
@@ -1037,21 +1116,21 @@ export function renderRecyclePage(vault) {
 
 export function renderSettingsPage(vault) {
   const s = vault.settings;
-  const autoLockLabel = s.autoLockMinutes === 0 ? 'Never' : `${s.autoLockMinutes} minutes`;
-  const reminderLabel = s.passwordReminderDays === 0 ? 'Never' : `${s.passwordReminderDays} days`;
+  const autoLockLabel = s.autoLockMinutes === 0 ? 'Tidak pernah' : `${s.autoLockMinutes} menit`;
+  const reminderLabel = s.passwordReminderDays === 0 ? 'Tidak pernah' : `${s.passwordReminderDays} hari`;
 
   return `
     <div class="page-inner animate-fadeIn">
-      <div class="page-header"><h2 class="page-title">Settings</h2></div>
+      <div class="page-header"><h2 class="page-title">Pengaturan</h2></div>
 
       <div class="settings-group">
-        <div class="settings-group-title">Security</div>
+        <div class="settings-group-title">Keamanan</div>
         <div class="settings-item" data-action="show-change-password">
           <div class="settings-item-left">
             <div class="settings-item-icon"><i data-lucide="key-round"></i></div>
             <div>
-              <div class="settings-item-text">Master Password</div>
-              <div class="settings-item-desc">Change your master password</div>
+              <div class="settings-item-text">Kata Sandi Utama</div>
+              <div class="settings-item-desc">Ubah kata sandi utama Anda</div>
             </div>
           </div>
           <div class="settings-item-right"><i data-lucide="chevron-right"></i></div>
@@ -1060,8 +1139,8 @@ export function renderSettingsPage(vault) {
           <div class="settings-item-left">
             <div class="settings-item-icon"><i data-lucide="timer"></i></div>
             <div>
-              <div class="settings-item-text">Auto Lock</div>
-              <div class="settings-item-desc">Lock vault after inactivity</div>
+              <div class="settings-item-text">Kunci Otomatis</div>
+              <div class="settings-item-desc">Kunci brankas setelah tidak aktif</div>
             </div>
           </div>
           <div class="settings-item-right">
@@ -1073,8 +1152,8 @@ export function renderSettingsPage(vault) {
           <div class="settings-item-left">
             <div class="settings-item-icon"><i data-lucide="bell"></i></div>
             <div>
-              <div class="settings-item-text">Password Reminder</div>
-              <div class="settings-item-desc">Remind to change old passwords</div>
+              <div class="settings-item-text">Pengingat Kata Sandi</div>
+              <div class="settings-item-desc">Ingatkan untuk mengubah kata sandi lama</div>
             </div>
           </div>
           <div class="settings-item-right">
@@ -1085,13 +1164,13 @@ export function renderSettingsPage(vault) {
       </div>
 
       <div class="settings-group">
-        <div class="settings-group-title">Backup</div>
+        <div class="settings-group-title">Cadangan Data</div>
         <div class="settings-item" data-action="export-backup">
           <div class="settings-item-left">
             <div class="settings-item-icon"><i data-lucide="download"></i></div>
             <div>
-              <div class="settings-item-text">Export Backup</div>
-              <div class="settings-item-desc">Download encrypted vault file</div>
+              <div class="settings-item-text">Ekspor Cadangan</div>
+              <div class="settings-item-desc">Unduh file brankas terenkripsi</div>
             </div>
           </div>
           <div class="settings-item-right"><i data-lucide="chevron-right"></i></div>
@@ -1100,8 +1179,8 @@ export function renderSettingsPage(vault) {
           <div class="settings-item-left">
             <div class="settings-item-icon"><i data-lucide="upload"></i></div>
             <div>
-              <div class="settings-item-text">Import Backup</div>
-              <div class="settings-item-desc">Restore from backup file</div>
+              <div class="settings-item-text">Impor Cadangan</div>
+              <div class="settings-item-desc">Pulihkan dari file cadangan (.pvault / .json)</div>
             </div>
           </div>
           <div class="settings-item-right"><i data-lucide="chevron-right"></i></div>
@@ -1109,13 +1188,13 @@ export function renderSettingsPage(vault) {
       </div>
 
       <div class="settings-group">
-        <div class="settings-group-title">About</div>
+        <div class="settings-group-title">Tentang Aplikasi</div>
         <div class="settings-item" style="cursor:default">
           <div class="settings-item-left">
             <div class="settings-item-icon"><i data-lucide="info"></i></div>
             <div>
               <div class="settings-item-text">Personal Vault</div>
-              <div class="settings-item-desc">Version 1.0 — All data stored locally</div>
+              <div class="settings-item-desc">Versi 1.0 — Semua data disimpan lokal di perangkat ini</div>
             </div>
           </div>
         </div>
@@ -1125,7 +1204,7 @@ export function renderSettingsPage(vault) {
         <div class="settings-item" data-action="lock-vault" style="justify-content:center; cursor:pointer;">
           <div class="flex items-center gap-2" style="color: var(--accent);">
             <i data-lucide="lock"></i>
-            <span class="fw-600">Lock Vault</span>
+            <span class="fw-600">Kunci Brankas</span>
           </div>
         </div>
       </div>
@@ -1139,7 +1218,7 @@ export function renderSettingsPage(vault) {
 export function renderConfirmModal(title, message, confirmText, confirmAction, confirmClass = 'btn-danger', iconType = 'danger') {
   return `
     <div class="modal-overlay confirm-dialog" data-action="close-modal">
-      <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal">
         <div class="modal-body text-center" style="padding: var(--sp-8) var(--sp-6)">
           <div class="confirm-icon ${iconType}">
             <i data-lucide="${iconType === 'danger' ? 'alert-triangle' : 'alert-circle'}"></i>
@@ -1147,7 +1226,7 @@ export function renderConfirmModal(title, message, confirmText, confirmAction, c
           <h3 style="margin-bottom: var(--sp-2)">${title}</h3>
           <p class="confirm-message">${message}</p>
           <div class="flex gap-3 justify-center">
-            <button class="btn btn-secondary" data-action="close-modal">Cancel</button>
+            <button class="btn btn-secondary" data-action="close-modal">Batal</button>
             <button class="btn ${confirmClass}" data-action="${confirmAction}">${confirmText}</button>
           </div>
         </div>
@@ -1174,7 +1253,7 @@ export function renderInputModal(title, fields, submitText, submitAction) {
 
   return `
     <div class="modal-overlay" data-action="close-modal">
-      <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal">
         <div class="modal-header">
           <h3 class="modal-title">${title}</h3>
           <button class="btn-icon" data-action="close-modal"><i data-lucide="x"></i></button>
@@ -1183,7 +1262,7 @@ export function renderInputModal(title, fields, submitText, submitAction) {
           <div class="form-grid">${fieldsHtml}</div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" data-action="close-modal">Cancel</button>
+          <button class="btn btn-secondary" data-action="close-modal">Batal</button>
           <button class="btn btn-primary" data-action="${submitAction}">${submitText}</button>
         </div>
       </div>

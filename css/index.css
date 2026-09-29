@@ -348,6 +348,56 @@ h4 { font-size: var(--fs-lg); }
   color: var(--text-muted);
 }
 
+.auth-reset-section {
+  margin-top: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.auth-reset-section .auth-footer {
+  margin-top: 0;
+}
+
+.btn-reset-vault {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-md);
+  transition: all var(--t-fast);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.btn-reset-vault:hover {
+  color: var(--danger);
+  background: var(--danger-bg);
+  text-decoration: none;
+}
+
+.btn-reset-vault svg {
+  width: 13px;
+  height: 13px;
+}
+
+.auth-reset-confirm-box {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4);
+  width: 100%;
+  margin-top: var(--sp-4);
+  text-align: center;
+}
+
+
 .auth-card.shake {
   animation: shake 0.4s ease;
 }
@@ -2197,3 +2247,121 @@ textarea.input-field {
     max-height: 90vh;
   }
 }
+
+
+/* ---------- 30. MORE MENU DRAWER (Mobile) ---------- */
+.more-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 200;
+  backdrop-filter: blur(2px);
+}
+
+.more-menu-drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 201;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  padding: var(--sp-3) var(--sp-5) calc(var(--sp-8) + env(safe-area-inset-bottom, 0));
+  box-shadow: var(--shadow-xl);
+}
+
+.more-menu-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto var(--sp-4);
+}
+
+.more-menu-title {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--sp-4);
+}
+
+.more-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-3);
+}
+
+.more-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-2);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--t-fast);
+  text-align: center;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.more-menu-item:hover,
+.more-menu-item:active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.more-menu-item.active {
+  color: var(--accent);
+}
+
+.more-menu-item.active .more-menu-icon {
+  background: var(--accent-subtle);
+  border-color: rgba(124, 92, 252, 0.3);
+}
+
+.more-menu-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  transition: all var(--t-fast);
+}
+
+.more-menu-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.more-menu-icon.yellow { background: var(--warning-bg); color: var(--warning); border-color: var(--warning-border); }
+.more-menu-icon.blue   { background: var(--info-bg);    color: var(--info);    border-color: var(--info-border); }
+.more-menu-icon.purple { background: var(--accent-subtle); color: var(--accent); border-color: rgba(124,92,252,0.2); }
+.more-menu-icon.green  { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+.more-menu-icon.red    { background: var(--danger-bg);  color: var(--danger);  border-color: var(--danger-border); }
+.more-menu-icon.gray   { background: var(--bg-elevated); color: var(--text-secondary); }
+
+.more-menu-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--danger);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  margin-left: var(--sp-1);
+  vertical-align: middle;
+}
+

@@ -1,0 +1,10 @@
+# Dependencies (di-generate ulang dengan `npm install`, tidak perlu masuk Git)
+node_modules/
+
+# Logs & temp
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db

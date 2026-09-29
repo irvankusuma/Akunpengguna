@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Personal Vault — Brankas digital lokal & pengelola kata sandi zero-knowledge yang aman. Dideskripsikan dengan AES-256-GCM." />
+    <meta name="theme-color" content="#0B0D10" />
+    <title>Personal Vault 🔐 | Brankas Digital Aman</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet" />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237C5CFC' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E" />
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/index.css" />
+  </head>
+  <body>
+    <!-- Auth Screen (Login / Setup / Lock) -->
+    <div id="auth-screen" class="auth-screen"></div>
+
+    <!-- Main App Shell -->
+    <div id="app" class="app">
+      <!-- Desktop Sidebar -->
+      <aside id="sidebar" class="sidebar"></aside>
+
+      <!-- Content Area -->
+      <div class="app-content">
+        <main id="page-container" class="page-scroll"></main>
+      </div>
+
+      <!-- Mobile Bottom Navigation -->
+      <nav id="bottom-nav" class="bottom-nav"></nav>
+    </div>
+
+    <!-- Modals Container -->
+    <div id="modal-container"></div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Hidden file input for backup restore -->
+    <input
+      type="file"
+      id="backup-file-input"
+      accept=".pvault,.json"
+      style="display: none" />
+
+    <!-- Lucide Icons -->
+    <script src="js/vendor/lucide.min.js"></script>
+
+    <!-- Application Module -->
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

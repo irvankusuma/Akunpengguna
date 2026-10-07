@@ -12,7 +12,9 @@ import {
   changeMasterPassword,
   exportVault,
   importVault,
-  destroyVault
+  destroyVault,
+  getStoredCipherBundle,
+  writeCipherBundle
 } from './crypto.js';
 import {
   createEmptyVault,
@@ -63,12 +65,24 @@ import {
   renderRecyclePage,
   renderSettingsPage,
   renderConfirmModal,
-  renderInputModal
+  renderInputModal,
+  renderFirebaseAuthScreen
 } from './ui.js';
+import {
+  onAuth,
+  registerAccount,
+  loginAccount,
+  logoutAccount,
+  uploadVaultBundle,
+  downloadVaultBundle,
+  deleteCloudVault,
+  friendlyError
+} from './cloud.js';
 
 /* ---------- APPLICATION STATE ---------- */
 let vault = null;
 let encryptionKey = null;
+let firebaseUser = null;
 let currentPage = 'dashboard';
 let pageHistory = [];
 let searchQuery = '';
@@ -87,20 +101,72 @@ document.addEventListener('DOMContentLoaded', () => {
 export function initApp() {
   setupGlobalListeners();
   setupInactivityTracking();
+  initAuthGate();
+}
 
-  const isInit = isVaultInitialized();
+/* ---------- FIREBASE AUTH GATE ---------- */
+function initAuthGate() {
   const authScreen = document.getElementById('auth-screen');
   const appScreen = document.getElementById('app');
 
   if (authScreen) {
-    authScreen.innerHTML = renderAuthScreen(isInit);
     authScreen.classList.remove('hidden');
+    authScreen.innerHTML = renderFirebaseAuthScreen('loading');
   }
-  if (appScreen) {
-    appScreen.classList.remove('active');
+  if (appScreen) appScreen.classList.remove('active');
+  refreshIcons();
+
+  onAuth((user) => {
+    const previousUid = firebaseUser?.uid;
+    firebaseUser = user;
+
+    // Logout / belum login → tampilkan layar login Firebase
+    if (!user) {
+      vault = null;
+      encryptionKey = null;
+      if (autoLockTimer) clearTimeout(autoLockTimer);
+      closeModal();
+      if (appScreen) appScreen.classList.remove('active');
+      if (authScreen) {
+        authScreen.classList.remove('hidden');
+        authScreen.innerHTML = renderFirebaseAuthScreen('login');
+        refreshIcons();
+      }
+      return;
+    }
+
+    // Sudah login & brankas sudah terbuka untuk user yang sama → tidak perlu apa-apa
+    if (vault && encryptionKey && previousUid === user.uid) return;
+
+    // Baru login → pastikan bundle lokal ada (unduh dari cloud bila kosong),
+    // lalu tampilkan layar buka-kunci / setup Kata Sandi Utama.
+    prepareVaultScreen();
+  });
+}
+
+async function prepareVaultScreen() {
+  const authScreen = document.getElementById('auth-screen');
+  const appScreen = document.getElementById('app');
+
+  if (!isVaultInitialized()) {
+    if (authScreen) authScreen.innerHTML = renderFirebaseAuthScreen('loading');
+    try {
+      const bundle = await downloadVaultBundle();
+      if (bundle) writeCipherBundle(bundle);
+    } catch (err) {
+      console.warn('Gagal mengunduh vault dari cloud:', err);
+    }
   }
 
-  refreshIcons();
+  const isInit = isVaultInitialized();
+  if (appScreen) appScreen.classList.remove('active');
+  if (authScreen) {
+    authScreen.classList.remove('hidden');
+    authScreen.innerHTML = renderAuthScreen(isInit);
+    refreshIcons();
+    const focusId = isInit ? 'master-password' : 'setup-name';
+    setTimeout(() => document.getElementById(focusId)?.focus(), 100);
+  }
 }
 
 /* ---------- AUTO-LOCK & INACTIVITY ---------- */
@@ -163,6 +229,7 @@ async function persistVault() {
   if (!vault || !encryptionKey) return;
   try {
     await saveVault(vault, encryptionKey);
+    await syncToCloud(false);
   } catch (err) {
     console.error('Error saving vault:', err);
     showToast('Terjadi kesalahan saat menyimpan data brankas', 'error');
@@ -173,8 +240,21 @@ async function persistVaultSilently() {
   if (!vault || !encryptionKey) return;
   try {
     await saveVault(vault, encryptionKey);
+    await syncToCloud(true);
   } catch (err) {
     console.warn('Silently failed to save vault on exit:', err);
+  }
+}
+
+/* Unggah bundle terenkripsi ke cloud (bila sedang login). Tidak memblokir UX lokal. */
+async function syncToCloud(silent = false) {
+  if (!firebaseUser) return;
+  try {
+    const bundle = getStoredCipherBundle();
+    if (bundle) await uploadVaultBundle(bundle);
+  } catch (err) {
+    console.warn('Cloud sync gagal:', err);
+    if (!silent) showToast('Tersimpan lokal, tapi gagal sinkron ke cloud: ' + friendlyError(err), 'warning');
   }
 }
 
@@ -242,7 +322,7 @@ export function navigateTo(page, params = {}, pushHistory = true) {
       break;
 
     case 'settings':
-      container.innerHTML = renderSettingsPage(vault);
+      container.innerHTML = renderSettingsPage(vault, firebaseUser);
       break;
 
     case 'detail': {
@@ -424,6 +504,7 @@ async function handleGlobalClick(e) {
       const input = document.getElementById('reset-confirm-input');
       if (input?.value.trim() !== 'RESET') return;
       destroyVault();
+      try { await deleteCloudVault(); } catch (err) { console.warn('Gagal hapus vault cloud:', err); }
       vault = null;
       encryptionKey = null;
       const authScreen = document.getElementById('auth-screen');
@@ -976,6 +1057,77 @@ async function handleGlobalClick(e) {
       break;
     }
 
+    case 'show-firebase-mode': {
+      e.preventDefault();
+      const mode = target.dataset.mode === 'register' ? 'register' : 'login';
+      const authScreen = document.getElementById('auth-screen');
+      if (authScreen) {
+        authScreen.innerHTML = renderFirebaseAuthScreen(mode);
+        refreshIcons();
+        const focusId = mode === 'register' ? 'fb-reg-email' : 'fb-login-email';
+        setTimeout(() => document.getElementById(focusId)?.focus(), 100);
+      }
+      break;
+    }
+
+    case 'firebase-logout': {
+      e.preventDefault();
+      try {
+        if (vault) await persistVaultSilently();
+        await logoutAccount();
+        showToast('Anda telah keluar', 'info');
+        // onAuth(null) akan menampilkan layar login Firebase
+      } catch (err) {
+        showToast('Gagal keluar: ' + friendlyError(err), 'error');
+      }
+      break;
+    }
+
+    case 'sync-upload': {
+      e.preventDefault();
+      if (!firebaseUser) { showToast('Belum login ke akun cloud', 'warning'); break; }
+      try {
+        const bundle = getStoredCipherBundle();
+        if (!bundle) { showToast('Belum ada brankas untuk diunggah', 'warning'); break; }
+        await uploadVaultBundle(bundle);
+        addActivityToVault(vault, createActivity(ACTIONS.EXPORT_BACKUP, null, 'Disinkronkan ke cloud'));
+        await persistVaultSilently();
+        showToast('Brankas berhasil disinkronkan ke cloud', 'success');
+      } catch (err) {
+        showToast('Gagal unggah ke cloud: ' + friendlyError(err), 'error');
+      }
+      break;
+    }
+
+    case 'sync-download': {
+      e.preventDefault();
+      if (!firebaseUser) { showToast('Belum login ke akun cloud', 'warning'); break; }
+      showModal(renderConfirmModal(
+        'Unduh dari Cloud',
+        'Data brankas di perangkat ini akan <strong>ditimpa</strong> oleh salinan dari cloud. Anda akan diminta memasukkan Kata Sandi Utama lagi. Lanjutkan?',
+        'Unduh & Kunci',
+        'confirm-sync-download',
+        'btn-primary',
+        'info'
+      ));
+      break;
+    }
+
+    case 'confirm-sync-download': {
+      e.preventDefault();
+      try {
+        const bundle = await downloadVaultBundle();
+        if (!bundle) { showToast('Tidak ada data di cloud', 'warning'); closeModal(); break; }
+        writeCipherBundle(bundle);
+        closeModal();
+        lockVault(false);
+        showToast('Data cloud diunduh. Silakan buka kunci dengan Kata Sandi Utama.', 'success');
+      } catch (err) {
+        showToast('Gagal unduh dari cloud: ' + friendlyError(err), 'error');
+      }
+      break;
+    }
+
     case 'close-modal': {
       e.preventDefault();
       // Jika dipicu oleh lapisan latar (overlay), tutup hanya saat klik tepat pada
@@ -1058,6 +1210,55 @@ async function handleGlobalSubmit(e) {
   e.preventDefault();
   const form = e.target;
 
+  // 0a. LOGIN AKUN FIREBASE
+  if (form.id === 'firebase-login-form') {
+    const email = document.getElementById('fb-login-email')?.value.trim();
+    const password = document.getElementById('fb-login-password')?.value;
+    const errEl = document.getElementById('fb-error');
+    if (!email || !password) {
+      if (errEl) errEl.textContent = 'Email dan password wajib diisi';
+      return;
+    }
+    try {
+      if (errEl) errEl.textContent = '';
+      await loginAccount(email, password);
+      showToast('Login berhasil', 'success');
+      // onAuth akan menyiapkan layar buka-kunci brankas
+    } catch (err) {
+      if (errEl) errEl.textContent = friendlyError(err);
+    }
+    return;
+  }
+
+  // 0b. DAFTAR AKUN FIREBASE
+  if (form.id === 'firebase-register-form') {
+    const email = document.getElementById('fb-reg-email')?.value.trim();
+    const password = document.getElementById('fb-reg-password')?.value;
+    const confirm = document.getElementById('fb-reg-confirm')?.value;
+    const errEl = document.getElementById('fb-error');
+    if (!email || !password) {
+      if (errEl) errEl.textContent = 'Email dan password wajib diisi';
+      return;
+    }
+    if (password.length < 6) {
+      if (errEl) errEl.textContent = 'Password minimal 6 karakter';
+      return;
+    }
+    if (password !== confirm) {
+      if (errEl) errEl.textContent = 'Konfirmasi password tidak cocok';
+      return;
+    }
+    try {
+      if (errEl) errEl.textContent = '';
+      await registerAccount(email, password);
+      showToast('Akun dibuat! Sekarang buat Kata Sandi Utama brankas Anda.', 'success');
+      // onAuth → prepareVaultScreen → layar setup Kata Sandi Utama
+    } catch (err) {
+      if (errEl) errEl.textContent = friendlyError(err);
+    }
+    return;
+  }
+
   // 1. UNLOCK VAULT
   if (form.id === 'auth-form') {
     const pwInput = document.getElementById('master-password');
@@ -1139,6 +1340,9 @@ async function handleGlobalSubmit(e) {
     try {
       vault = createEmptyVault(name);
       encryptionKey = await initializeVault(password, vault);
+
+      // Unggah bundle terenkripsi pertama ke cloud (bila login Firebase)
+      await syncToCloud(true);
 
       const authScreen = document.getElementById('auth-screen');
       const appScreen = document.getElementById('app');

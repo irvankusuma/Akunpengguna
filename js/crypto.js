@@ -243,6 +243,29 @@ export function destroyVault() {
   localStorage.removeItem(STORAGE_CHECK_KEY);
 }
 
+/**
+ * Ambil bundle terenkripsi mentah dari penyimpanan lokal (untuk sync cloud).
+ * Mengembalikan { salt, vault, check } (string) atau null bila belum ada.
+ */
+export function getStoredCipherBundle() {
+  const salt = localStorage.getItem(STORAGE_SALT_KEY);
+  const vault = localStorage.getItem(STORAGE_VAULT_KEY);
+  const check = localStorage.getItem(STORAGE_CHECK_KEY);
+  if (!salt || !vault) return null;
+  return { salt, vault, check };
+}
+
+/**
+ * Tulis bundle terenkripsi (mis. hasil unduh dari cloud) ke penyimpanan lokal.
+ */
+export function writeCipherBundle(bundle) {
+  if (!bundle || !bundle.salt || !bundle.vault) return false;
+  localStorage.setItem(STORAGE_SALT_KEY, bundle.salt);
+  localStorage.setItem(STORAGE_VAULT_KEY, bundle.vault);
+  if (bundle.check) localStorage.setItem(STORAGE_CHECK_KEY, bundle.check);
+  return true;
+}
+
 
 /* ---------- Helpers ---------- */
 

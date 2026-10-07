@@ -293,6 +293,95 @@ export function renderResetConfirmScreen() {
 
 
 
+/* ==================== FIREBASE AUTH SCREEN ==================== */
+
+export function renderFirebaseAuthScreen(mode = 'login') {
+  if (mode === 'loading') {
+    return `
+      <div class="auth-bg"></div>
+      <div class="auth-card" id="auth-card">
+        <div class="auth-icon"><i data-lucide="loader"></i></div>
+        <h1 class="auth-title">Memuat…</h1>
+        <p class="auth-subtitle">Menghubungkan ke layanan cloud.</p>
+      </div>
+    `;
+  }
+
+  if (mode === 'register') {
+    return `
+      <div class="auth-bg"></div>
+      <div class="auth-card" id="auth-card">
+        <div class="auth-icon"><i data-lucide="user-plus"></i></div>
+        <h1 class="auth-title">Buat Akun Cloud</h1>
+        <p class="auth-subtitle">Akun ini dipakai untuk menyimpan brankas <strong>terenkripsi</strong> Anda di cloud agar bisa dibuka di perangkat lain. Kata Sandi Utama brankas tetap terpisah dan tidak pernah dikirim.</p>
+        <form class="auth-form" id="firebase-register-form">
+          <div class="input-group">
+            <label class="input-label" for="fb-reg-email">Email</label>
+            <div class="input-wrap">
+              <input type="email" id="fb-reg-email" class="input-field" placeholder="nama@email.com" autocomplete="email" autofocus>
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="fb-reg-password">Password</label>
+            <div class="input-wrap">
+              <input type="password" id="fb-reg-password" class="input-field" placeholder="Minimal 6 karakter" autocomplete="new-password">
+              <div class="input-action">
+                <button type="button" class="btn-icon" data-action="toggle-password-visibility" data-target="fb-reg-password"><i data-lucide="eye"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="fb-reg-confirm">Konfirmasi Password</label>
+            <div class="input-wrap">
+              <input type="password" id="fb-reg-confirm" class="input-field" placeholder="Ulangi password" autocomplete="new-password">
+            </div>
+          </div>
+          <div class="auth-error" id="fb-error"></div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block"><i data-lucide="user-plus"></i><span>Daftar</span></button>
+        </form>
+        <div class="auth-reset-section">
+          <p class="auth-footer">Sudah punya akun?</p>
+          <button type="button" class="btn-reset-vault" data-action="show-firebase-mode" data-mode="login"><i data-lucide="log-in"></i> Masuk</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // login
+  return `
+    <div class="auth-bg"></div>
+    <div class="auth-card" id="auth-card">
+      <div class="auth-icon"><i data-lucide="cloud"></i></div>
+      <h1 class="auth-title">Masuk ke Cloud</h1>
+      <p class="auth-subtitle">Masuk untuk membuka dan menyinkronkan brankas terenkripsi Anda.</p>
+      <form class="auth-form" id="firebase-login-form">
+        <div class="input-group">
+          <label class="input-label" for="fb-login-email">Email</label>
+          <div class="input-wrap">
+            <input type="email" id="fb-login-email" class="input-field" placeholder="nama@email.com" autocomplete="email" autofocus>
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="fb-login-password">Password</label>
+          <div class="input-wrap">
+            <input type="password" id="fb-login-password" class="input-field" placeholder="Password akun Anda" autocomplete="current-password">
+            <div class="input-action">
+              <button type="button" class="btn-icon" data-action="toggle-password-visibility" data-target="fb-login-password"><i data-lucide="eye"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="auth-error" id="fb-error"></div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block"><i data-lucide="log-in"></i><span>Masuk</span></button>
+      </form>
+      <div class="auth-reset-section">
+        <p class="auth-footer">Belum punya akun?</p>
+        <button type="button" class="btn-reset-vault" data-action="show-firebase-mode" data-mode="register"><i data-lucide="user-plus"></i> Daftar</button>
+      </div>
+    </div>
+  `;
+}
+
+
 /* ==================== DASHBOARD ==================== */
 
 export function renderDashboard(vault) {
@@ -1114,7 +1203,7 @@ export function renderRecyclePage(vault) {
 
 /* ==================== SETTINGS ==================== */
 
-export function renderSettingsPage(vault) {
+export function renderSettingsPage(vault, account = null) {
   const s = vault.settings;
   const autoLockLabel = s.autoLockMinutes === 0 ? 'Tidak pernah' : `${s.autoLockMinutes} menit`;
   const reminderLabel = s.passwordReminderDays === 0 ? 'Tidak pernah' : `${s.passwordReminderDays} hari`;
@@ -1185,6 +1274,51 @@ export function renderSettingsPage(vault) {
           </div>
           <div class="settings-item-right"><i data-lucide="chevron-right"></i></div>
         </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-title">Akun &amp; Sinkronisasi Cloud</div>
+        <div class="settings-item" style="cursor:default">
+          <div class="settings-item-left">
+            <div class="settings-item-icon"><i data-lucide="cloud"></i></div>
+            <div>
+              <div class="settings-item-text">${account ? escapeHtml(account.email || 'Akun terhubung') : 'Tidak terhubung'}</div>
+              <div class="settings-item-desc">${account ? 'Data terenkripsi tersinkron ke Firebase' : 'Login untuk menyimpan data di cloud'}</div>
+            </div>
+          </div>
+        </div>
+        ${account ? `
+        <div class="settings-item" data-action="sync-upload">
+          <div class="settings-item-left">
+            <div class="settings-item-icon"><i data-lucide="upload-cloud"></i></div>
+            <div>
+              <div class="settings-item-text">Sinkronkan ke Cloud</div>
+              <div class="settings-item-desc">Unggah brankas terenkripsi sekarang</div>
+            </div>
+          </div>
+          <div class="settings-item-right"><i data-lucide="chevron-right"></i></div>
+        </div>
+        <div class="settings-item" data-action="sync-download">
+          <div class="settings-item-left">
+            <div class="settings-item-icon"><i data-lucide="download-cloud"></i></div>
+            <div>
+              <div class="settings-item-text">Unduh dari Cloud</div>
+              <div class="settings-item-desc">Timpa data lokal dengan salinan cloud</div>
+            </div>
+          </div>
+          <div class="settings-item-right"><i data-lucide="chevron-right"></i></div>
+        </div>
+        <div class="settings-item" data-action="firebase-logout" style="cursor:pointer">
+          <div class="settings-item-left">
+            <div class="settings-item-icon" style="color:var(--danger)"><i data-lucide="log-out"></i></div>
+            <div>
+              <div class="settings-item-text" style="color:var(--danger)">Keluar dari Akun</div>
+              <div class="settings-item-desc">Data lokal tetap ada; sinkron berhenti</div>
+            </div>
+          </div>
+          <div class="settings-item-right"><i data-lucide="chevron-right"></i></div>
+        </div>
+        ` : ''}
       </div>
 
       <div class="settings-group">

@@ -206,6 +206,10 @@ export function renderAuthScreen(isInitialized) {
             <i data-lucide="rotate-ccw"></i>
             Lupa kata sandi? Reset Brankas
           </button>
+          <button type="button" class="btn-reset-vault" data-action="back-to-cloud-login">
+            <i data-lucide="log-out"></i>
+            Salah akun? Kembali ke login cloud
+          </button>
         </div>
       </div>
     `;
@@ -259,6 +263,12 @@ export function renderAuthScreen(isInitialized) {
         </button>
       </form>
       <p class="auth-footer">🔒 Data Anda tidak akan pernah meninggalkan perangkat ini. Enkripsi AES-256.</p>
+      <div class="auth-reset-section">
+        <button type="button" class="btn-reset-vault" data-action="back-to-cloud-login">
+          <i data-lucide="log-out"></i>
+          Salah akun? Kembali ke login cloud
+        </button>
+      </div>
     </div>
   `;
 }

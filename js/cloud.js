@@ -20,9 +20,23 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 
 const VAULT_COLLECTION = 'vaults';
+const CLOUD_TIMEOUT_MS = 10000;
 
 function vaultRef(uid) {
   return doc(db, VAULT_COLLECTION, uid);
+}
+
+/* Batasi waktu tunggu operasi Firestore agar UI tidak pernah menggantung lama. */
+function withTimeout(promise, ms = CLOUD_TIMEOUT_MS) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const err = new Error('Waktu koneksi ke cloud habis.');
+      err.code = 'cloud/timeout';
+      reject(err);
+    }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
 /** Berlangganan perubahan status login. cb(user|null) dipanggil saat load & login/logout. */
@@ -61,12 +75,12 @@ export async function uploadVaultBundle(bundle) {
   if (!user) throw new Error('Belum login');
   if (!bundle || !bundle.salt || !bundle.vault) throw new Error('Tidak ada data untuk diunggah');
 
-  await setDoc(vaultRef(user.uid), {
+  await withTimeout(setDoc(vaultRef(user.uid), {
     salt: bundle.salt,
     vault: bundle.vault,
     check: bundle.check || null,
     updatedAt: serverTimestamp()
-  });
+  }));
   return true;
 }
 
@@ -77,7 +91,7 @@ export async function uploadVaultBundle(bundle) {
 export async function downloadVaultBundle() {
   const user = auth.currentUser;
   if (!user) return null;
-  const snap = await getDoc(vaultRef(user.uid));
+  const snap = await withTimeout(getDoc(vaultRef(user.uid)));
   if (!snap.exists()) return null;
   const d = snap.data();
   if (!d || !d.salt || !d.vault) return null;
@@ -112,7 +126,8 @@ export function friendlyError(err) {
     'auth/too-many-requests': 'Terlalu banyak percobaan. Coba lagi nanti.',
     'auth/network-request-failed': 'Gagal terhubung ke jaringan/Firebase.',
     'permission-denied': 'Akses ditolak. Pastikan Firestore sudah dibuat & Rules sudah di-publish.',
-    'unavailable': 'Layanan Firestore tidak tersedia. Coba lagi.'
+    'unavailable': 'Layanan Firestore tidak tersedia. Coba lagi.',
+    'cloud/timeout': 'Koneksi ke cloud melebihi 10 detik. Data tetap tersimpan aman di perangkat ini; sinkronisasi bisa dicoba lagi dari Pengaturan.'
   };
   return map[code] || err?.message || 'Terjadi kesalahan pada koneksi cloud.';
 }

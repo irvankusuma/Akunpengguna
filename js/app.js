@@ -70,6 +70,7 @@ import {
 } from './ui.js';
 import {
   onAuth,
+  getCurrentUser,
   registerAccount,
   loginAccount,
   logoutAccount,
@@ -229,7 +230,7 @@ async function persistVault() {
   if (!vault || !encryptionKey) return;
   try {
     await saveVault(vault, encryptionKey);
-    await syncToCloud(false);
+    syncToCloud(false); // sengaja tidak di-await: sync cloud tidak boleh menahan UI
   } catch (err) {
     console.error('Error saving vault:', err);
     showToast('Terjadi kesalahan saat menyimpan data brankas', 'error');
@@ -240,21 +241,26 @@ async function persistVaultSilently() {
   if (!vault || !encryptionKey) return;
   try {
     await saveVault(vault, encryptionKey);
-    await syncToCloud(true);
+    syncToCloud(true); // sengaja tidak di-await: sync cloud tidak boleh menahan UI
   } catch (err) {
     console.warn('Silently failed to save vault on exit:', err);
   }
 }
 
+let syncInProgress = false;
+
 /* Unggah bundle terenkripsi ke cloud (bila sedang login). Tidak memblokir UX lokal. */
 async function syncToCloud(silent = false) {
-  if (!firebaseUser) return;
+  if (!firebaseUser || syncInProgress) return;
+  syncInProgress = true;
   try {
     const bundle = getStoredCipherBundle();
     if (bundle) await uploadVaultBundle(bundle);
   } catch (err) {
     console.warn('Cloud sync gagal:', err);
     if (!silent) showToast('Tersimpan lokal, tapi gagal sinkron ke cloud: ' + friendlyError(err), 'warning');
+  } finally {
+    syncInProgress = false;
   }
 }
 
@@ -1083,6 +1089,31 @@ async function handleGlobalClick(e) {
       break;
     }
 
+    case 'back-to-cloud-login': {
+      e.preventDefault();
+      try {
+        await logoutAccount();
+        // onAuth(null) biasanya merender layar login; ini cadangan bila belum sempat fire
+        if (!getCurrentUser()) {
+          vault = null;
+          encryptionKey = null;
+          if (autoLockTimer) clearTimeout(autoLockTimer);
+          closeModal();
+          const authScreen = document.getElementById('auth-screen');
+          const appScreen = document.getElementById('app');
+          if (appScreen) appScreen.classList.remove('active');
+          if (authScreen) {
+            authScreen.classList.remove('hidden');
+            authScreen.innerHTML = renderFirebaseAuthScreen('login');
+            refreshIcons();
+          }
+        }
+      } catch (err) {
+        showToast('Gagal kembali ke login cloud: ' + friendlyError(err), 'error');
+      }
+      break;
+    }
+
     case 'sync-upload': {
       e.preventDefault();
       if (!firebaseUser) { showToast('Belum login ke akun cloud', 'warning'); break; }
@@ -1268,7 +1299,7 @@ async function handleGlobalSubmit(e) {
     const password = pwInput?.value;
 
     if (!password) {
-      if (errEl) errEl.textContent = 'Please enter your master password';
+      if (errEl) errEl.textContent = 'Silakan masukkan kata sandi utama Anda';
       return;
     }
 
@@ -1295,11 +1326,11 @@ async function handleGlobalSubmit(e) {
         if (appScreen) appScreen.classList.add('active');
         resetAutoLockTimer();
         navigateTo('dashboard', {}, false);
-        showToast(`Welcome back, ${vault.settings.userName || 'User'}!`, 'success');
+        showToast(`Selamat datang kembali, ${vault.settings.userName || 'User'}!`, 'success');
       }, 300);
 
     } catch (err) {
-      if (errEl) errEl.textContent = 'Incorrect master password. Please try again.';
+      if (errEl) errEl.textContent = 'Kata sandi utama salah. Coba lagi.';
       if (cardEl) {
         cardEl.classList.add('shake');
         setTimeout(() => cardEl.classList.remove('shake'), 400);
@@ -1324,12 +1355,12 @@ async function handleGlobalSubmit(e) {
     const confirm = confInput?.value || '';
 
     if (password.length < 8) {
-      if (errEl) errEl.textContent = 'Password must be at least 8 characters long';
+      if (errEl) errEl.textContent = 'Kata sandi minimal 8 karakter';
       return;
     }
 
     if (password !== confirm) {
-      if (errEl) errEl.textContent = 'Passwords do not match';
+      if (errEl) errEl.textContent = 'Kata sandi tidak cocok';
       if (cardEl) {
         cardEl.classList.add('shake');
         setTimeout(() => cardEl.classList.remove('shake'), 400);

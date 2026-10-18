@@ -94,6 +94,27 @@ let autoLockTimer = null;
 let clipboardClearTimer = null;
 let generatorOptions = getDefaultGeneratorOptions();
 
+/* ---------- SECURITY STATE ---------- */
+let failedAttempts = 0;
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_MS = 5 * 60 * 1000; // 5 minutes
+let lockoutUntil = 0;
+
+/* ---------- SECURITY HELPERS ---------- */
+function isLockoutActive() {
+  return Date.now() < lockoutUntil;
+}
+function recordFailedAttempt() {
+  failedAttempts++;
+  if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+    lockoutUntil = Date.now() + LOCKOUT_MS;
+    failedAttempts = 0; // reset after lockout starts
+  }
+}
+function clearLockout() {
+  failedAttempts = 0;
+  lockoutUntil = 0;
+}
 /* ---------- INITIALIZATION ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
@@ -1298,6 +1319,19 @@ async function handleGlobalSubmit(e) {
     const iconEl = document.getElementById('auth-icon');
     const password = pwInput?.value;
 
+    // Check lockout
+    if (isLockoutActive()) {
+      const remaining = Math.ceil((lockoutUntil - Date.now()) / 1000);
+      if (errEl) errEl.textContent = `Akun terkunci sementara karena terlalu banyak percobaan salah. Silakan coba lagi setelah ${remaining} detik.`;
+      if (cardEl) cardEl.classList.add('shake');
+      setTimeout(() => cardEl?.classList.remove('shake'), 400);
+      if (pwInput) {
+        pwInput.value = '';
+        pwInput.focus();
+      }
+      return;
+    }
+
     if (!password) {
       if (errEl) errEl.textContent = 'Silakan masukkan kata sandi utama Anda';
       return;
@@ -1316,6 +1350,9 @@ async function handleGlobalSubmit(e) {
       // Log login
       addActivityToVault(vault, createActivity(ACTIONS.UNLOCK, null, 'Vault unlocked successfully'));
       await persistVaultSilently();
+
+      // Clear lockout and failed attempts on success
+      clearLockout();
 
       // Fade out auth screen and reveal app
       const authScreen = document.getElementById('auth-screen');
@@ -1338,6 +1375,15 @@ async function handleGlobalSubmit(e) {
       if (pwInput) {
         pwInput.value = '';
         pwInput.focus();
+      }
+      // Record failed attempt
+      recordFailedAttempt();
+      // If lockout now active, show lockout message
+      if (isLockoutActive()) {
+        const remaining = Math.ceil((lockoutUntil - Date.now()) / 1000);
+        if (errEl) errEl.textContent = `Akun terkunci sementara karena terlalu banyak percobaan salah. Silakan coba lagi setelah ${remaining} detik.`;
+        if (cardEl) cardEl.classList.add('shake');
+        setTimeout(() => cardEl?.classList.remove('shake'), 400);
       }
     }
   }
